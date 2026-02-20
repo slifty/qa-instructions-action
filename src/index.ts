@@ -1,6 +1,6 @@
 import * as core from "@actions/core";
 
-async function run(): Promise<void> {
+export async function run(): Promise<void> {
 	try {
 		core.info("QA Instructions Action is running!");
 
@@ -20,4 +20,6 @@ async function run(): Promise<void> {
 	}
 }
 
-run();
+if (process.env["VITEST"] === undefined) {
+	run();
+}
