@@ -10,7 +10,8 @@
 		"lint:prettier": "prettier --check .",
 		"format": "npm run format:eslint && npm run format:prettier",
 		"format:eslint": "eslint . --fix",
-		"format:prettier": "prettier --write ."
+		"format:prettier": "prettier --write .",
+		"test": "vitest run"
 	},
 	"repository": {
 		"type": "git",
@@ -30,6 +31,7 @@
 		"eslint-plugin-prettier": "^5",
 		"prettier": "^3",
 		"typescript": "^5.9.3",
-		"typescript-eslint": "^8"
+		"typescript-eslint": "^8",
+		"vitest": "^4.0.18"
 	}
 }

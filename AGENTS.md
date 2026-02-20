@@ -4,6 +4,7 @@ A GitHub Action (TypeScript + Node 20) that generates QA instructions.
 
 ## Build Commands
 
+- `npm test` — run unit tests via Vitest
 - `npm run build` — compile TypeScript and bundle into `dist/index.js`
 - `npm run lint` — run all linters (ESLint + Prettier check)
 - `npm run lint:eslint` — run ESLint
