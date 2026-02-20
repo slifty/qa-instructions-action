@@ -1,21 +1,26 @@
 name: "QA Instructions Action"
-description: "A GitHub Action that generates QA testing instructions for pull requests using Claude"
+description: "A GitHub Action that generates QA testing instructions for pull requests using AI"
 inputs:
   github-token:
-    description: "GitHub token for API access"
+    description: "GitHub token for API access (also used for GitHub Models authentication)"
     required: true
     default: ${{ github.token }}
+  provider:
+    description: 'AI provider to use: "github-models" or "anthropic"'
+    required: false
+    default: "github-models"
   anthropic-api-key:
-    description: "Anthropic API key for Claude"
-    required: true
+    description: 'Anthropic API key for Claude (required when provider is "anthropic")'
+    required: false
+    default: ""
   prompt:
     description: "Optional custom instructions appended to the prompt"
     required: false
     default: ""
   model:
-    description: "Claude model to use"
+    description: "AI model to use (defaults to provider-appropriate model if not set)"
     required: false
-    default: "claude-sonnet-4-5-20250929"
+    default: ""
 outputs:
   instructions:
     description: "The generated QA instructions"

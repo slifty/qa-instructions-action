@@ -1,6 +1,7 @@
 import * as core from "@actions/core";
 import * as github from "@actions/github";
-import { DEFAULT_MODEL } from "./constants.js";
+import { SYSTEM_PROMPT, VALID_PROVIDERS } from "./constants.js";
+import type { Provider } from "./constants.js";
 import {
 	getPrMetadata,
 	getPrDiff,
@@ -9,7 +10,7 @@ import {
 	getPrCommits,
 } from "./github.js";
 import { buildPromptContext } from "./context-builder.js";
-import { generateQAInstructions } from "./claude.js";
+import { createProvider, getContextLimits } from "./provider-factory.js";
 import { postOrUpdateComment } from "./comment.js";
 
 export async function run(): Promise<void> {
@@ -17,11 +18,10 @@ export async function run(): Promise<void> {
 		core.info("QA Instructions Action is running!");
 
 		const token = core.getInput("github-token", { required: true });
-		const anthropicApiKey = core.getInput("anthropic-api-key", {
-			required: true,
-		});
+		const provider = core.getInput("provider") || "github-models";
+		const anthropicApiKey = core.getInput("anthropic-api-key");
 		const customPrompt = core.getInput("prompt");
-		const model = core.getInput("model") || DEFAULT_MODEL;
+		const model = core.getInput("model");
 
 		const pullRequest = github.context.payload.pull_request;
 		if (!pullRequest) {
@@ -35,6 +35,23 @@ export async function run(): Promise<void> {
 		const { owner, repo } = github.context.repo;
 
 		const octokit = github.getOctokit(token);
+
+		if (!VALID_PROVIDERS.includes(provider as Provider)) {
+			core.setFailed(
+				`Invalid provider "${provider}". Must be one of: ${VALID_PROVIDERS.join(", ")}`,
+			);
+			return;
+		}
+		const validatedProvider = provider as Provider;
+
+		const aiProvider = createProvider({
+			provider: validatedProvider,
+			model,
+			anthropicApiKey,
+			githubToken: token,
+			octokit,
+		});
+		const contextLimits = getContextLimits(validatedProvider);
 
 		// Fetch Pr metadata first (need headSha for file tree)
 		core.info("Fetching Pr metadata...");
@@ -54,13 +71,13 @@ export async function run(): Promise<void> {
 		const promptContext = buildPromptContext(
 			{ metadata, diff, changedFiles, fileTree, commits },
 			customPrompt,
+			contextLimits,
 		);
 
-		// Generate QA instructions via Claude
+		// Generate QA instructions via AI provider
 		core.info("Generating QA instructions...");
-		const instructions = await generateQAInstructions(
-			anthropicApiKey,
-			model,
+		const instructions = await aiProvider.generateQAInstructions(
+			SYSTEM_PROMPT,
 			promptContext,
 		);
 
