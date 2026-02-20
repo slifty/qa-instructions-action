@@ -2,27 +2,61 @@
 
 [![CI](https://github.com/slifty/qa-instructions-action/actions/workflows/ci.yml/badge.svg)](https://github.com/slifty/qa-instructions-action/actions/workflows/ci.yml)
 
-A GitHub Action that writes QA instructions.
+A GitHub Action that automatically generates QA testing instructions for pull requests using Claude. On each PR push, it gathers context about the changes and posts (or updates) a comment with structured testing instructions.
 
 ## Usage
 
 ```yaml
-- uses: slifty/qa-instructions-action@v1
-  with:
-    github-token: ${{ secrets.GITHUB_TOKEN }}
+name: QA Instructions
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+permissions:
+  pull-requests: write
+
+jobs:
+  qa-instructions:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: slifty/qa-instructions-action@v1
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
 ```
+
+**Requirements:**
+
+- `permissions: pull-requests: write` is required for posting PR comments
+- `ANTHROPIC_API_KEY` must be stored as a repository secret
+- The `synchronize` event type triggers on each push, updating the existing comment
 
 ## Inputs
 
-| Input          | Description                 | Required | Default               |
-| -------------- | --------------------------- | -------- | --------------------- |
-| `github-token` | GitHub token for API access | Yes      | `${{ github.token }}` |
+| Input               | Description                                 | Required | Default                      |
+| ------------------- | ------------------------------------------- | -------- | ---------------------------- |
+| `github-token`      | GitHub token for API access                 | Yes      | `${{ github.token }}`        |
+| `anthropic-api-key` | Anthropic API key for Claude                | Yes      | —                            |
+| `prompt`            | Optional custom instructions for the prompt | No       | `""`                         |
+| `model`             | Claude model to use                         | No       | `claude-sonnet-4-5-20250929` |
 
 ## Outputs
 
 | Output         | Description                   |
 | -------------- | ----------------------------- |
 | `instructions` | The generated QA instructions |
+
+## How It Works
+
+1. Gathers PR context: metadata, diff, changed file contents, repository file tree, and commit history
+2. Builds a structured prompt with tiered truncation to fit within model context limits
+3. Sends the prompt to Claude, which generates QA instructions covering:
+   - Summary of changes
+   - Test environment setup
+   - Specific test scenarios with steps and expected results
+   - Regression risks
+   - Things to watch for
+4. Posts (or updates) the instructions as a PR comment, identified by a hidden HTML marker
 
 ## Development
 
@@ -37,6 +71,7 @@ npm install
 | Command                   | Description                            |
 | ------------------------- | -------------------------------------- |
 | `npm run build`           | Compile TypeScript and bundle with ncc |
+| `npm test`                | Run unit tests via Vitest              |
 | `npm run lint`            | Run all linters (ESLint + Prettier)    |
 | `npm run lint:eslint`     | Run ESLint                             |
 | `npm run lint:prettier`   | Check Prettier formatting              |
