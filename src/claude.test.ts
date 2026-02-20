@@ -14,31 +14,35 @@ vi.mock("@anthropic-ai/sdk", () => {
 	};
 });
 
-import { generateQAInstructions } from "./claude.js";
-import { DEFAULT_MODEL } from "./constants.js";
+import { createAnthropicProvider } from "./claude.js";
+import { DEFAULT_ANTHROPIC_MODEL } from "./constants.js";
 
-describe("generateQAInstructions", () => {
+describe("createAnthropicProvider", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 	});
 
-	it("sends context to Claude and returns text response", async () => {
+	it("sends prompts to Claude and returns text response", async () => {
 		mockCreate.mockResolvedValue({
 			content: [{ type: "text", text: "## QA Instructions\n\nTest this." }],
 		});
 
-		const result = await generateQAInstructions(
+		const provider = createAnthropicProvider(
 			"test-api-key",
-			DEFAULT_MODEL,
-			"PR context here",
+			DEFAULT_ANTHROPIC_MODEL,
+		);
+		const result = await provider.generateQAInstructions(
+			"system prompt",
+			"user prompt",
 		);
 
 		expect(result).toBe("## QA Instructions\n\nTest this.");
 		expect(mockCreate).toHaveBeenCalledWith(
 			expect.objectContaining({
-				model: DEFAULT_MODEL,
+				model: DEFAULT_ANTHROPIC_MODEL,
 				max_tokens: 4096,
-				messages: [{ role: "user", content: "PR context here" }],
+				system: "system prompt",
+				messages: [{ role: "user", content: "user prompt" }],
 			}),
 		);
 	});
@@ -48,8 +52,10 @@ describe("generateQAInstructions", () => {
 			content: [],
 		});
 
+		const provider = createAnthropicProvider("key", "model");
+
 		await expect(
-			generateQAInstructions("key", "model", "context"),
+			provider.generateQAInstructions("system", "user"),
 		).rejects.toThrow("No text content in Claude response");
 	});
 });

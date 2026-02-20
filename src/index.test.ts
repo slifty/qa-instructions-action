@@ -13,14 +13,16 @@ vi.mock("@actions/github", () => ({
 }));
 vi.mock("./github.js");
 vi.mock("./context-builder.js");
-vi.mock("./claude.js");
+vi.mock("./provider-factory.js");
 vi.mock("./comment.js");
 
-import { DEFAULT_MODEL } from "./constants.js";
 import * as ghModule from "./github.js";
 import * as contextBuilder from "./context-builder.js";
-import * as claude from "./claude.js";
+import * as providerFactory from "./provider-factory.js";
 import * as comment from "./comment.js";
+import { GITHUB_MODELS_CONTEXT_LIMITS } from "./constants.js";
+
+const mockGenerateQAInstructions = vi.fn();
 
 describe("run", () => {
 	beforeEach(() => {
@@ -29,7 +31,8 @@ describe("run", () => {
 		vi.mocked(core.getInput).mockImplementation((name: string) => {
 			const inputs: Record<string, string> = {
 				"github-token": "fake-token",
-				"anthropic-api-key": "fake-api-key",
+				"anthropic-api-key": "",
+				provider: "github-models",
 				prompt: "",
 				model: "",
 			};
@@ -38,6 +41,14 @@ describe("run", () => {
 
 		vi.mocked(github.getOctokit).mockReturnValue(
 			"mock-octokit" as unknown as ReturnType<typeof github.getOctokit>,
+		);
+
+		mockGenerateQAInstructions.mockResolvedValue("QA instructions");
+		vi.mocked(providerFactory.createProvider).mockReturnValue({
+			generateQAInstructions: mockGenerateQAInstructions,
+		});
+		vi.mocked(providerFactory.getContextLimits).mockReturnValue(
+			GITHUB_MODELS_CONTEXT_LIMITS,
 		);
 
 		vi.mocked(ghModule.getPrMetadata).mockResolvedValue({
@@ -54,9 +65,6 @@ describe("run", () => {
 		vi.mocked(contextBuilder.buildPromptContext).mockReturnValue(
 			"prompt context",
 		);
-		vi.mocked(claude.generateQAInstructions).mockResolvedValue(
-			"QA instructions",
-		);
 		vi.mocked(comment.postOrUpdateComment).mockResolvedValue();
 	});
 
@@ -64,6 +72,16 @@ describe("run", () => {
 		await run();
 
 		expect(github.getOctokit).toHaveBeenCalledWith("fake-token");
+		expect(providerFactory.createProvider).toHaveBeenCalledWith({
+			provider: "github-models",
+			model: "",
+			anthropicApiKey: "",
+			githubToken: "fake-token",
+			octokit: "mock-octokit",
+		});
+		expect(providerFactory.getContextLimits).toHaveBeenCalledWith(
+			"github-models",
+		);
 		expect(ghModule.getPrMetadata).toHaveBeenCalledWith(
 			"mock-octokit",
 			"test-owner",
@@ -94,10 +112,10 @@ describe("run", () => {
 				commits: [{ sha: "abc123", message: "commit" }],
 			},
 			"",
+			GITHUB_MODELS_CONTEXT_LIMITS,
 		);
-		expect(claude.generateQAInstructions).toHaveBeenCalledWith(
-			"fake-api-key",
-			DEFAULT_MODEL,
+		expect(mockGenerateQAInstructions).toHaveBeenCalledWith(
+			expect.any(String),
 			"prompt context",
 		);
 		expect(comment.postOrUpdateComment).toHaveBeenCalledWith(
@@ -113,11 +131,12 @@ describe("run", () => {
 		);
 	});
 
-	it("uses custom model when provided", async () => {
+	it("passes anthropic provider and API key when configured", async () => {
 		vi.mocked(core.getInput).mockImplementation((name: string) => {
 			const inputs: Record<string, string> = {
 				"github-token": "fake-token",
 				"anthropic-api-key": "fake-api-key",
+				provider: "anthropic",
 				prompt: "",
 				model: "claude-opus-4-20250514",
 			};
@@ -126,15 +145,35 @@ describe("run", () => {
 
 		await run();
 
-		expect(claude.generateQAInstructions).toHaveBeenCalledWith(
-			"fake-api-key",
-			"claude-opus-4-20250514",
-			"prompt context",
+		expect(providerFactory.createProvider).toHaveBeenCalledWith({
+			provider: "anthropic",
+			model: "claude-opus-4-20250514",
+			anthropicApiKey: "fake-api-key",
+			githubToken: "fake-token",
+			octokit: "mock-octokit",
+		});
+	});
+
+	it("defaults provider to github-models when input is empty", async () => {
+		vi.mocked(core.getInput).mockImplementation((name: string) => {
+			const inputs: Record<string, string> = {
+				"github-token": "fake-token",
+				"anthropic-api-key": "",
+				provider: "",
+				prompt: "",
+				model: "",
+			};
+			return inputs[name] ?? "";
+		});
+
+		await run();
+
+		expect(providerFactory.createProvider).toHaveBeenCalledWith(
+			expect.objectContaining({ provider: "github-models" }),
 		);
 	});
 
 	it("fails when not a pull_request event", async () => {
-		// Override the context to have no pull_request
 		const contextAny = github.context as unknown as Record<string, unknown>;
 		const originalPayload = contextAny.payload;
 		contextAny.payload = {};
@@ -145,8 +184,27 @@ describe("run", () => {
 			expect.stringContaining("pull_request event"),
 		);
 
-		// Restore
 		contextAny.payload = originalPayload;
+	});
+
+	it("fails for invalid provider", async () => {
+		vi.mocked(core.getInput).mockImplementation((name: string) => {
+			const inputs: Record<string, string> = {
+				"github-token": "fake-token",
+				"anthropic-api-key": "",
+				provider: "bad",
+				prompt: "",
+				model: "",
+			};
+			return inputs[name] ?? "";
+		});
+
+		await run();
+
+		expect(core.setFailed).toHaveBeenCalledWith(
+			expect.stringContaining('Invalid provider "bad"'),
+		);
+		expect(providerFactory.createProvider).not.toHaveBeenCalled();
 	});
 
 	it("calls setFailed when an error occurs", async () => {

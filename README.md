@@ -2,9 +2,43 @@
 
 [![CI](https://github.com/slifty/qa-instructions-action/actions/workflows/ci.yml/badge.svg)](https://github.com/slifty/qa-instructions-action/actions/workflows/ci.yml)
 
-A GitHub Action that automatically generates QA testing instructions for pull requests using Claude. On each PR push, it gathers context about the changes and posts (or updates) a comment with structured testing instructions.
+A GitHub Action that automatically generates QA testing instructions for pull requests using AI. On each PR push, it gathers context about the changes and posts (or updates) a comment with structured testing instructions.
+
+Supports two AI providers:
+
+- **GitHub Models** (default) — uses the GitHub Models inference API with your existing `GITHUB_TOKEN`. No API keys or subscriptions required.
+- **Anthropic** — uses the Anthropic API with a Claude model. Requires an API key.
 
 ## Usage
+
+### GitHub Models (default)
+
+```yaml
+name: QA Instructions
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+permissions:
+  pull-requests: write
+  models: read
+
+jobs:
+  qa-instructions:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: slifty/qa-instructions-action@v1
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+```
+
+**Requirements:**
+
+- `permissions: models: read` is required for GitHub Models API access
+- `permissions: pull-requests: write` is required for posting PR comments
+- The `synchronize` event type triggers on each push, updating the existing comment
+
+### Anthropic
 
 ```yaml
 name: QA Instructions
@@ -22,23 +56,33 @@ jobs:
       - uses: slifty/qa-instructions-action@v1
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
+          provider: anthropic
           anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
 ```
 
 **Requirements:**
 
-- `permissions: pull-requests: write` is required for posting PR comments
 - `ANTHROPIC_API_KEY` must be stored as a repository secret
-- The `synchronize` event type triggers on each push, updating the existing comment
+- `permissions: pull-requests: write` is required for posting PR comments
 
 ## Inputs
 
-| Input               | Description                                 | Required | Default                      |
-| ------------------- | ------------------------------------------- | -------- | ---------------------------- |
-| `github-token`      | GitHub token for API access                 | Yes      | `${{ github.token }}`        |
-| `anthropic-api-key` | Anthropic API key for Claude                | Yes      | —                            |
-| `prompt`            | Optional custom instructions for the prompt | No       | `""`                         |
-| `model`             | Claude model to use                         | No       | `claude-sonnet-4-5-20250929` |
+| Input               | Description                                                  | Required | Default               |
+| ------------------- | ------------------------------------------------------------ | -------- | --------------------- |
+| `github-token`      | GitHub token for API access and GitHub Models authentication | Yes      | `${{ github.token }}` |
+| `provider`          | AI provider: `"github-models"` or `"anthropic"`              | No       | `"github-models"`     |
+| `anthropic-api-key` | Anthropic API key (required when provider is `"anthropic"`)  | No       | `""`                  |
+| `prompt`            | Optional custom instructions appended to the prompt          | No       | `""`                  |
+| `model`             | AI model to use (defaults to a provider-appropriate model)   | No       | `""`                  |
+
+### Default models
+
+| Provider        | Default model                |
+| --------------- | ---------------------------- |
+| `github-models` | `openai/gpt-4o`              |
+| `anthropic`     | `claude-sonnet-4-5-20250929` |
+
+You can override the model with any model supported by the chosen provider.
 
 ## Outputs
 
@@ -50,7 +94,7 @@ jobs:
 
 1. Gathers PR context: metadata, diff, changed file contents, repository file tree, and commit history
 2. Builds a structured prompt with tiered truncation to fit within model context limits
-3. Sends the prompt to Claude, which generates QA instructions covering:
+3. Sends the prompt to the configured AI provider, which generates QA instructions covering:
    - Summary of changes
    - Test environment setup
    - Specific test scenarios with steps and expected results

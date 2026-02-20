@@ -2,6 +2,13 @@ import * as github from "@actions/github";
 
 export type Octokit = ReturnType<typeof github.getOctokit>;
 
+export interface AiProvider {
+	generateQAInstructions(
+		systemPrompt: string,
+		userPrompt: string,
+	): Promise<string>;
+}
+
 export interface PrMetadata {
 	title: string;
 	body: string;
