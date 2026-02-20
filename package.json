@@ -27,7 +27,7 @@
 		"@tsconfig/node20": "^20.1.9",
 		"@types/node": "^20",
 		"esbuild": "^0.27.3",
-		"eslint": "^9",
+		"eslint": "^10",
 		"eslint-config-prettier": "^10",
 		"eslint-plugin-prettier": "^5",
 		"prettier": "^3",
