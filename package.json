@@ -19,7 +19,7 @@
 	},
 	"license": "AGPL-3.0",
 	"dependencies": {
-		"@actions/core": "^1.11.1",
+		"@actions/core": "^3.0.0",
 		"@actions/github": "^9.0.0",
 		"@anthropic-ai/sdk": "^0.78.0"
 	},
