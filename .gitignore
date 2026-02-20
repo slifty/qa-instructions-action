@@ -47,6 +47,9 @@ web_modules/
 # TypeScript cache
 *.tsbuildinfo
 
+# TypeScript compiled output (intermediate; dist/ is the final bundle)
+lib/
+
 # Optional npm cache directory
 .npm
 

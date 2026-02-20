@@ -1,0 +1,35 @@
+{
+	"name": "qa-instructions-action",
+	"version": "0.1.0",
+	"description": "A GitHub Action that writes QA instructions",
+	"main": "dist/index.js",
+	"scripts": {
+		"build": "tsc && ncc build lib/index.js -o dist --source-map --license licenses.txt",
+		"lint": "npm run lint:eslint && npm run lint:prettier",
+		"lint:eslint": "eslint .",
+		"lint:prettier": "prettier --check .",
+		"format": "npm run format:eslint && npm run format:prettier",
+		"format:eslint": "eslint . --fix",
+		"format:prettier": "prettier --write ."
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/slifty/qa-instructions-action.git"
+	},
+	"license": "AGPL-3.0",
+	"dependencies": {
+		"@actions/core": "^1.11.1",
+		"@actions/github": "^6.0.1"
+	},
+	"devDependencies": {
+		"@tsconfig/node20": "^20.1.9",
+		"@types/node": "^20",
+		"@vercel/ncc": "^0.38.4",
+		"eslint": "^9",
+		"eslint-config-prettier": "^10",
+		"eslint-plugin-prettier": "^5",
+		"prettier": "^3",
+		"typescript": "^5.9.3",
+		"typescript-eslint": "^8"
+	}
+}

@@ -1,0 +1,48 @@
+name: Release
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: ".node-version"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Update release branch
+        env:
+          TAG: ${{ github.event.release.tag_name }}
+        run: |
+          # Extract major version (e.g., v1 from v1.2.3)
+          MAJOR=$(echo "$TAG" | grep -oE '^v[0-9]+')
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Force-add dist/ (normally gitignored)
+          git add -f dist/
+
+          # Create a commit with the built output
+          git commit -m "Build $TAG"
+
+          # Push to the major version branch (e.g., v1) and the exact tag
+          git tag -f "$MAJOR"
+          git push origin "HEAD:refs/heads/releases/$TAG" --force
+          git push origin "$MAJOR" --force
