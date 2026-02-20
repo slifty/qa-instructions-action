@@ -42596,7 +42596,7 @@ async function getPRDiff(octokit, owner, repo, pullNumber) {
   });
   return data;
 }
-async function getChangedFiles(octokit, owner, repo, pullNumber) {
+async function getChangedFiles(octokit, owner, repo, pullNumber, headSha) {
   const files = await octokit.paginate(octokit.rest.pulls.listFiles, {
     owner,
     repo,
@@ -42610,7 +42610,7 @@ async function getChangedFiles(octokit, owner, repo, pullNumber) {
         owner,
         repo,
         path: file.filename,
-        ref: file.sha ?? void 0
+        ref: headSha
       });
       if ("content" in data && typeof data.content === "string") {
         const content = Buffer.from(data.content, "base64").toString("utf-8");
@@ -47671,7 +47671,7 @@ async function run() {
     core2.info("Fetching PR diff, changed files, file tree, and commits...");
     const [diff, changedFiles, fileTree, commits] = await Promise.all([
       getPRDiff(octokit, owner, repo, pullNumber),
-      getChangedFiles(octokit, owner, repo, pullNumber),
+      getChangedFiles(octokit, owner, repo, pullNumber, metadata.headSha),
       getFileTree(octokit, owner, repo, metadata.headSha),
       getPRCommits(octokit, owner, repo, pullNumber)
     ]);

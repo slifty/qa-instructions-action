@@ -40,6 +40,7 @@ export async function getChangedFiles(
 	owner: string,
 	repo: string,
 	pullNumber: number,
+	headSha: string,
 ): Promise<FileContent[]> {
 	const files = await octokit.paginate(octokit.rest.pulls.listFiles, {
 		owner,
@@ -57,7 +58,7 @@ export async function getChangedFiles(
 				owner,
 				repo,
 				path: file.filename,
-				ref: file.sha ?? undefined,
+				ref: headSha,
 			});
 
 			if ("content" in data && typeof data.content === "string") {

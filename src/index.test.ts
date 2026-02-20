@@ -71,7 +71,13 @@ describe("run", () => {
 			42,
 		);
 		expect(ghModule.getPRDiff).toHaveBeenCalled();
-		expect(ghModule.getChangedFiles).toHaveBeenCalled();
+		expect(ghModule.getChangedFiles).toHaveBeenCalledWith(
+			"mock-octokit",
+			"test-owner",
+			"test-repo",
+			42,
+			"abc123",
+		);
 		expect(ghModule.getFileTree).toHaveBeenCalledWith(
 			"mock-octokit",
 			"test-owner",

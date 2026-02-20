@@ -112,7 +112,7 @@ describe("getChangedFiles", () => {
 			},
 		});
 
-		const result = await getChangedFiles(asOctokit(mock), "owner", "repo", 1);
+		const result = await getChangedFiles(asOctokit(mock), "owner", "repo", 1, "head-sha");
 
 		expect(result).toHaveLength(1);
 		expect(result[0]).toEqual({
@@ -128,7 +128,7 @@ describe("getChangedFiles", () => {
 		]);
 		mock.rest.repos.getContent.mockRejectedValue(new Error("Not found"));
 
-		const result = await getChangedFiles(asOctokit(mock), "owner", "repo", 1);
+		const result = await getChangedFiles(asOctokit(mock), "owner", "repo", 1, "head-sha");
 
 		expect(result).toHaveLength(0);
 		expect(core.warning).toHaveBeenCalledWith(
