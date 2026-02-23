@@ -1,6 +1,6 @@
 # QA Instructions Action
 
-[![CI](https://github.com/slifty/qa-instructions-action/actions/workflows/ci.yml/badge.svg)](https://github.com/slifty/qa-instructions-action/actions/workflows/ci.yml)
+[![CI](https://github.com/BadIdeaFactory/qa-instructions-action/actions/workflows/ci.yml/badge.svg)](https://github.com/BadIdeaFactory/qa-instructions-action/actions/workflows/ci.yml)
 
 A GitHub Action that automatically generates QA testing instructions for pull requests using AI. On each PR push, it gathers context about the changes and posts (or updates) a comment with structured testing instructions.
 
@@ -27,7 +27,7 @@ jobs:
   qa-instructions:
     runs-on: ubuntu-latest
     steps:
-      - uses: slifty/qa-instructions-action@v1
+      - uses: BadIdeaFactory/qa-instructions-action@v1
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 ```
@@ -53,7 +53,7 @@ jobs:
   qa-instructions:
     runs-on: ubuntu-latest
     steps:
-      - uses: slifty/qa-instructions-action@v1
+      - uses: BadIdeaFactory/qa-instructions-action@v1
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           provider: anthropic
