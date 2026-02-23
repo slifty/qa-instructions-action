@@ -155,13 +155,16 @@ npm install
 
 ### Node Version
 
-The Node version is defined in `.node-version` and must match the `runs.using` runtime in `action.yml`. GitHub Actions only supports specific Node runtimes (`node20`, `node24`, etc.). When updating, change all three locations together:
+This project follows a policy of using the active Node.js version supported by GitHub Actions. The Node version is defined in `.node-version` and must match the `runs.using` runtime in `action.yml`. GitHub Actions only supports specific Node runtimes (`node20`, `node24`, etc.).
+
+When updating to a new Node version, change all four locations together:
 
 1. `.node-version`
 2. `action.yml` → `runs.using`
 3. `@types/node` version in `package.json`
+4. `@tsconfig/nodeXX` version in `package.json` and `tsconfig.json`
 
-Currently using **Node 20**. GitHub plans to deprecate `node20` in favor of `node24` in March 2026.
+**Current version: Node 24**
 
 ### Making Changes
 

@@ -25,5 +25,5 @@ outputs:
   instructions:
     description: "The generated QA instructions"
 runs:
-  using: "node20"
+  using: "node24"
   main: "dist/index.js"

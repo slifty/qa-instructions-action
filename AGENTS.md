@@ -1,6 +1,6 @@
 # QA Instructions Action
 
-A GitHub Action (TypeScript + Node 20) that generates QA instructions.
+A GitHub Action (TypeScript + Node 24) that generates QA instructions.
 
 ## Build Commands
 
@@ -19,4 +19,4 @@ A GitHub Action (TypeScript + Node 20) that generates QA instructions.
 - **Strict TypeScript** — `tsconfig.json` has `strict: true`. Do not use `any` without justification.
 - **Lint and format before committing** — run `npm run lint` and `npm run format:check` before creating a commit.
 - **Source lives in `src/`** — all TypeScript source code is in the `src/` directory. The `lib/` directory is intermediate compiler output and is git-ignored.
-- **Node version** — defined in `.node-version` and must match the `runs.using` runtime in `action.yml`. When updating Node, change `.node-version`, `action.yml` (`runs.using`), and `@types/node` in `package.json` together.
+- **Node version** — this project uses the active Node.js version supported by GitHub Actions (currently Node 24). The version is defined in `.node-version` and must match the `runs.using` runtime in `action.yml`. When updating Node, change `.node-version`, `action.yml` (`runs.using`), `@types/node` in `package.json`, and `@tsconfig/nodeXX` in both `package.json` and `tsconfig.json` together.
