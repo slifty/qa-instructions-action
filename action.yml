@@ -1,5 +1,8 @@
 name: "QA Instructions Action"
 description: "A GitHub Action that generates QA testing instructions for pull requests using AI"
+branding:
+  icon: "clipboard"
+  color: "purple"
 inputs:
   github-token:
     description: "GitHub token for API access (also used for GitHub Models authentication)"
