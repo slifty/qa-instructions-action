@@ -1,6 +1,6 @@
 # QA Instructions Action
 
-[![CI](https://github.com/slifty/qa-instructions-action/actions/workflows/ci.yml/badge.svg)](https://github.com/slifty/qa-instructions-action/actions/workflows/ci.yml)
+[![CI](https://github.com/BadIdeaFactory/qa-instructions-action/actions/workflows/ci.yml/badge.svg)](https://github.com/BadIdeaFactory/qa-instructions-action/actions/workflows/ci.yml)
 
 A GitHub Action that automatically generates QA testing instructions for pull requests using AI. On each PR push, it gathers context about the changes and posts (or updates) a comment with structured testing instructions.
 
@@ -27,7 +27,7 @@ jobs:
   qa-instructions:
     runs-on: ubuntu-latest
     steps:
-      - uses: slifty/qa-instructions-action@v1
+      - uses: BadIdeaFactory/qa-instructions-action@v1
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 ```
@@ -53,7 +53,7 @@ jobs:
   qa-instructions:
     runs-on: ubuntu-latest
     steps:
-      - uses: slifty/qa-instructions-action@v1
+      - uses: BadIdeaFactory/qa-instructions-action@v1
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           provider: anthropic
@@ -101,6 +101,36 @@ You can override the model with any model supported by the chosen provider.
    - Regression risks
    - Things to watch for
 4. Posts (or updates) the instructions as a PR comment, identified by a hidden HTML marker
+
+## Troubleshooting
+
+### GitHub Models returns 403 Forbidden
+
+If you see a 403 error when using the `github-models` provider, GitHub Models may be disabled at the organization level. GitHub Models uses a hierarchical access control system:
+
+1. **Enterprise level** — An enterprise owner must enable GitHub Models for the enterprise (if your organization is part of an enterprise)
+2. **Organization level** — An organization owner must enable GitHub Models for the organization
+3. **Workflow level** — Your workflow must declare `permissions: models: read` (already in the example above)
+
+**To enable GitHub Models for your organization:**
+
+An organization owner needs to:
+
+1. Navigate to your organization's **Settings**
+2. Go to **Code, planning, and automation** → **Models** → **Development**
+3. Enable GitHub Models for the organization
+
+**Alternative workaround:**
+
+If you cannot enable GitHub Models at the organization level, switch to the Anthropic provider:
+
+```yaml
+- uses: BadIdeaFactory/qa-instructions-action@v1
+  with:
+    github-token: ${{ secrets.GITHUB_TOKEN }}
+    provider: anthropic
+    anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
+```
 
 ## Development
 
